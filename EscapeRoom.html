@@ -8,30 +8,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>碧潭密室</title>
 
-  <!-- MapLibre GL JS (3D 地圖) -->
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 
   <style>
     html, body {
-      width: 100%;
-      height: 100%;
-      height: 100vh;
-      height: 100dvh;
       margin: 0;
       padding: 0;
       overflow: hidden;
       position: fixed;
       inset: 0;
-      background-color: #1a1a1a;
+      background: #1a1a1a;
     }
 
-    /* full screen map */
+    /* 重要：用 JS 動態 vh 修正 iOS */
+    :root {
+      --vh: 1vh;
+    }
+
     #map {
       position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: calc(var(--vh) * 100);
     }
 
     /* Rectangle 1 */
@@ -44,7 +44,6 @@
       bottom: 10px;
       background: #353535;
       border: 1px solid #9D817D;
-      box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
       border-radius: 10px;
       z-index: 10;
     }
@@ -60,20 +59,17 @@
       bottom: 100px;
       background: #353535;
       border: 1px solid #9D817D;
-      box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
       border-radius: 5px;
       z-index: 11;
     }
 
-    /* 阿瑠文字 */
     .aru-text {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-family: 'SF Pro', sans-serif;
       font-size: 12px;
-      color: #FFFFFF;
+      color: #fff;
       pointer-events: none;
       white-space: nowrap;
     }
@@ -81,100 +77,75 @@
 </head>
 <body>
 
-  <div id="map"></div>
+<div id="map"></div>
 
-  <!-- UI -->
-  <div class="rectangle1"></div>
-  <div class="rectangle2">
-    <div class="aru-text">阿瑠</div>
-  </div>
+<div class="rectangle1"></div>
+<div class="rectangle2"><div class="aru-text">阿瑠</div></div>
 
-  <script>
-    const startPoint = [121.53757876493243, 24.957843316982597];
+<script>
+  // 修正 iOS viewport 真實高度
+  function setVH() {
+    document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+  }
+  setVH();
+  window.addEventListener('resize', setVH);
+  window.addEventListener('orientationchange', setVH);
 
-    const map = new maplibregl.Map({
-      container: 'map',
-      style: 'https://tiles.openfreemap.org/styles/liberty',
-      center: startPoint,
-      zoom: 15.5,
-      pitch: 60,
-      bearing: -20
-    });
+  const startPoint = [121.53757876493243, 24.957843316982597];
 
-    map.addControl(new maplibregl.NavigationControl());
+  const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://tiles.openfreemap.org/styles/liberty',
+    center: startPoint,
+    zoom: 15.5,
+    pitch: 60,
+    bearing: -20
+  });
 
+  map.addControl(new maplibregl.NavigationControl());
+
+  const points = [
+    startPoint,
+    [121.53718727937625, 24.958020472873933],
+    [121.53700218472507, 24.958708953293844],
+    [121.5359826848114, 24.956359743373927]
+  ];
+
+  points.forEach((p, i) => {
     new maplibregl.Marker()
-      .setLngLat(startPoint)
-      .setPopup(new maplibregl.Popup().setText('起點'))
+      .setLngLat(p)
+      .setPopup(new maplibregl.Popup().setText(`第${i+1}點`))
       .addTo(map);
+  });
 
-    const point2 = [121.53718727937625, 24.958020472873933];
-    new maplibregl.Marker()
-      .setLngLat(point2)
-      .setPopup(new maplibregl.Popup().setText('第二個點'))
-      .addTo(map);
+  function loadRoute() {
+    const data = {
+      type: 'FeatureCollection',
+      features: [{
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: points
+        }
+      }]
+    };
 
-    const point3 = [121.53700218472507, 24.958708953293844];
-    new maplibregl.Marker()
-      .setLngLat(point3)
-      .setPopup(new maplibregl.Popup().setText('第三個點'))
-      .addTo(map);
-
-    const point7 = [121.5359826848114, 24.956359743373927];
-    new maplibregl.Marker()
-      .setLngLat(point7)
-      .setPopup(new maplibregl.Popup().setText('第七個點'))
-      .addTo(map);
-
-    function loadStraightRoute() {
-      const routeCoordinates = [startPoint, point2, point3, point7];
-      const routeData = {
-        type: 'FeatureCollection',
-        features: [{
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: routeCoordinates
-          }
-        }]
-      };
-
-      if (!map.getSource('planned-route')) {
-        map.addSource('planned-route', {
-          type: 'geojson',
-          data: routeData
-        });
-
-        map.addLayer({
-          id: 'planned-route-line',
-          type: 'line',
-          source: 'planned-route',
-          layout: {
-            'line-cap': 'round',
-            'line-join': 'round'
-          },
-          paint: {
-            'line-color': '#ff5a5f',
-            'line-width': 5,
-            'line-opacity': 0.85
-          }
-        });
-      } else {
-        map.getSource('planned-route').setData(routeData);
-      }
-
-      const bounds = routeCoordinates.reduce(
-        (acc, coord) => acc.extend(coord),
-        new maplibregl.LngLatBounds(routeCoordinates[0], routeCoordinates[0])
-      );
-      map.fitBounds(bounds, { padding: 60 });
+    if (!map.getSource('route')) {
+      map.addSource('route', { type: 'geojson', data });
+      map.addLayer({
+        id: 'route-line',
+        type: 'line',
+        source: 'route',
+        paint: {
+          'line-color': '#ff5a5f',
+          'line-width': 5
+        }
+      });
     }
+  }
 
-    map.on('load', () => {
-      loadStraightRoute();
-    });
-  </script>
+  map.on('load', loadRoute);
+</script>
 
 </body>
 </html>
