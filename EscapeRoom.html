@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EscapeRoom</title>
+
+  <!-- MapLibre GL JS (3D 地圖) -->
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Rectangle 1 */
+    .rectangle1 {
+      box-sizing: border-box;
+      position: absolute;
+      width: calc(100% - 40px);
+      height: 100px;
+      left: 20px;
+      bottom: 20px;
+      background: #353535;
+      border: 1px solid #9D817D;
+      box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+      z-index: 10;
+    }
+
+    /* Rectangle 2 - moved up 110px */
+    .rectangle2 {
+      box-sizing: border-box;
+      position: absolute;
+      width: calc(100% - 380px);
+      height: 20px;
+      left: 120px;
+      right: 260px;
+      bottom: 110px;
+      background: #353535;
+      border: 1px solid #9D817D;
+      box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+      z-index: 11;
+    }
+
+    /* 阿瑠文字 - moved up 110px */
+    .aru-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'SF Pro', sans-serif;
+      font-style: normal;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 14px;
+      color: #FFFFFF;
+      z-index: 12;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="map"></div>
+
+  <!-- UI -->
+  <div class="rectangle1"></div>
+  <div class="rectangle2">
+    <div class="aru-text">阿瑠</div>
+  </div>
+
+  <script>
+    const startPoint = [121.53757876493243, 24.957843316982597];
+
+    const map = new maplibregl.Map({
+      container: 'map',
+      style: 'https://tiles.openfreemap.org/styles/liberty',
+      center: startPoint,
+      zoom: 15.5,
+      pitch: 60,
+      bearing: -20
+    });
+
+    map.addControl(new maplibregl.NavigationControl());
+
+    new maplibregl.Marker()
+      .setLngLat(startPoint)
+      .setPopup(new maplibregl.Popup().setText('起點'))
+      .addTo(map);
+
+    const point2 = [121.53718727937625, 24.958020472873933];
+    new maplibregl.Marker()
+      .setLngLat(point2)
+      .setPopup(new maplibregl.Popup().setText('第二個點'))
+      .addTo(map);
+
+    const point3 = [121.53700218472507, 24.958708953293844];
+    new maplibregl.Marker()
+      .setLngLat(point3)
+      .setPopup(new maplibregl.Popup().setText('第三個點'))
+      .addTo(map);
+
+    const point7 = [121.5359826848114, 24.956359743373927];
+    new maplibregl.Marker()
+      .setLngLat(point7)
+      .setPopup(new maplibregl.Popup().setText('第七個點'))
+      .addTo(map);
+
+    function loadStraightRoute() {
+      const routeCoordinates = [startPoint, point2, point3, point7];
+      const routeData = {
+        type: 'FeatureCollection',
+        features: [{
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: routeCoordinates
+          }
+        }]
+      };
+
+      if (!map.getSource('planned-route')) {
+        map.addSource('planned-route', {
+          type: 'geojson',
+          data: routeData
+        });
+
+        map.addLayer({
+          id: 'planned-route-line',
+          type: 'line',
+          source: 'planned-route',
+          layout: {
+            'line-cap': 'round',
+            'line-join': 'round'
+          },
+          paint: {
+            'line-color': '#ff5a5f',
+            'line-width': 5,
+            'line-opacity': 0.85
+          }
+        });
+      } else {
+        map.getSource('planned-route').setData(routeData);
+      }
+
+      const bounds = routeCoordinates.reduce(
+        (acc, coord) => acc.extend(coord),
+        new maplibregl.LngLatBounds(routeCoordinates[0], routeCoordinates[0])
+      );
+      map.fitBounds(bounds, { padding: 60 });
+    }
+
+    map.on('load', () => {
+      loadStraightRoute();
+    });
+  </script>
+
+</body>
+</html>
