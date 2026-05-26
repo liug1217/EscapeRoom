@@ -26,19 +26,9 @@
       background-color: #1a1a1a;
     }
 
-    /* 主容器（安全區版本） */
-    .main-container {
-      width: 100%;
-      height: 100%;
-      box-sizing: border-box;
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
-      padding-left: env(safe-area-inset-left);
-      padding-right: env(safe-area-inset-right);
-    }
-
+    /* full screen map */
     #map {
-      position: absolute;
+      position: fixed;
       inset: 0;
       width: 100%;
       height: 100%;
@@ -91,14 +81,12 @@
 </head>
 <body>
 
-  <div class="main-container">
-    <div id="map"></div>
+  <div id="map"></div>
 
-    <!-- UI -->
-    <div class="rectangle1"></div>
-    <div class="rectangle2">
-      <div class="aru-text">阿瑠</div>
-    </div>
+  <!-- UI -->
+  <div class="rectangle1"></div>
+  <div class="rectangle2">
+    <div class="aru-text">阿瑠</div>
   </div>
 
   <script>
