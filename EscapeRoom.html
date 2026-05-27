@@ -16,22 +16,16 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
-      position: fixed;
-      inset: 0;
+      width: 100%;
+      height: 100%;
       background: #1a1a1a;
     }
 
-    /* 重要：用 JS 動態 vh 修正 iOS */
-    :root {
-      --vh: 1vh;
-    }
-
     #map {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: calc(var(--vh) * 100);
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100dvh;
     }
 
     /* Rectangle 1 */
@@ -83,14 +77,6 @@
 <div class="rectangle2"><div class="aru-text">阿瑠</div></div>
 
 <script>
-  // 修正 iOS viewport 真實高度
-  function setVH() {
-    document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
-  }
-  setVH();
-  window.addEventListener('resize', setVH);
-  window.addEventListener('orientationchange', setVH);
-
   const startPoint = [121.53757876493243, 24.957843316982597];
 
   const map = new maplibregl.Map({
