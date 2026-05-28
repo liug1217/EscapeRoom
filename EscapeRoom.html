@@ -42,7 +42,7 @@
       justify-content: center;
     }
 
-    /* Rectangle 2 */
+    /* Rectangle 2 now becomes container for label */
     .rect2 {
       box-sizing: border-box;
       position: absolute;
@@ -56,21 +56,19 @@
       box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
       border-radius: 5px;
       z-index: 11;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    /* 阿瑠 */
+    /* 阿瑠 centered inside Rectangle 2 */
     .label {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 123px;
       font-family: 'SF Pro';
       font-style: normal;
       font-weight: 400;
       font-size: 12px;
       line-height: 14px;
       color: #FFFFFF;
-      z-index: 12;
     }
 
     /* dialog under Rectangle 2 */
@@ -97,8 +95,9 @@
   <!-- UI Overlay -->
   <div class="rect1"></div>
 
-  <div class="rect2"></div>
-  <div class="label">阿瑠</div>
+  <div class="rect2">
+    <div class="label">阿瑠</div>
+  </div>
 
   <div class="dialog">哎呀！現代的感應科技真方便，竟然能用衛星定位找到我！我是水源守護靈『阿瑠』。</div>
 
@@ -170,7 +169,6 @@
   </script>
 
 <script>
-    // typewriter effect for dialog
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.querySelector('.dialog');
       const text = el.textContent;
