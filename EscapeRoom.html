@@ -2,137 +2,190 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#AED7FF">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>碧潭密室</title>
 
+  <!-- MapLibre GL JS (3D 地圖) -->
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
       width: 100%;
       height: 100%;
-      background: #1a1a1a;
-      overscroll-behavior: none;
+      margin: 0;
+      padding: 0;
     }
 
     #map {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
     }
 
-    /* Rectangle 1 */
-    .rectangle1 {
+    /* Rectangle 1 - full width */
+    .rect1 {
       box-sizing: border-box;
       position: absolute;
       width: calc(100% - 20px);
-      height: 100px;
+      height: 120px;
       left: 10px;
+      right: 10px;
       bottom: 10px;
       background: #353535;
       border: 1px solid #9D817D;
+      box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
       border-radius: 10px;
       z-index: 10;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* Rectangle 2 */
-    .rectangle2 {
+    .rect2 {
       box-sizing: border-box;
       position: absolute;
       width: calc(100% - 380px);
       height: 20px;
       left: 120px;
-      right: 200px;
-      bottom: 100px;
+      right: 260px;
+      bottom: 120px;
       background: #353535;
       border: 1px solid #9D817D;
+      box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
       border-radius: 5px;
       z-index: 11;
     }
 
-    .aru-text {
+    /* 阿瑠 */
+    .label {
       position: absolute;
-      top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: translateX(-50%);
+      bottom: 123px;
+      font-family: 'SF Pro';
+      font-style: normal;
+      font-weight: 400;
       font-size: 12px;
-      color: #fff;
-      pointer-events: none;
-      white-space: nowrap;
+      line-height: 14px;
+      color: #FFFFFF;
+      z-index: 12;
+    }
+
+    /* dialog under Rectangle 2 */
+    .dialog {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 75px;
+      width: 388px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 15px;
+      color: #FFFFFF;
+      text-align: left;
+      z-index: 13;
     }
   </style>
 </head>
 <body>
 
-<div id="map"></div>
+  <div id="map"></div>
 
-<div class="rectangle1"></div>
-<div class="rectangle2"><div class="aru-text">阿瑠</div></div>
+  <!-- UI Overlay -->
+  <div class="rect1"></div>
+
+  <div class="rect2"></div>
+  <div class="label">阿瑠</div>
+
+  <div class="dialog">哎呀！現代的感應科技真方便，竟然能用衛星定位找到我！我是水源守護靈『阿瑠』。</div>
+
+  <script>
+    const startPoint = [121.53757876493243, 24.957843316982597];
+
+    const map = new maplibregl.Map({
+      container: 'map',
+      style: 'https://tiles.openfreemap.org/styles/liberty',
+      center: startPoint,
+      zoom: 15.5,
+      pitch: 60,
+      bearing: -20
+    });
+
+    map.addControl(new maplibregl.NavigationControl());
+
+    new maplibregl.Marker()
+      .setLngLat(startPoint)
+      .setPopup(new maplibregl.Popup().setText('起點'))
+      .addTo(map);
+
+    const point2 = [121.53718727937625, 24.958020472873933];
+    new maplibregl.Marker().setLngLat(point2).setPopup(new maplibregl.Popup().setText('第二個點')).addTo(map);
+
+    const point3 = [121.53700218472507, 24.958708953293844];
+    new maplibregl.Marker().setLngLat(point3).setPopup(new maplibregl.Popup().setText('第三個點')).addTo(map);
+
+    const point7 = [121.5359826848114, 24.956359743373927];
+    new maplibregl.Marker().setLngLat(point7).setPopup(new maplibregl.Popup().setText('第七個點')).addTo(map);
+
+    function loadStraightRoute() {
+      const routeCoordinates = [startPoint, point2, point3, point7];
+
+      const routeData = {
+        type: 'FeatureCollection',
+        features: [{
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: routeCoordinates
+          }
+        }]
+      };
+
+      if (!map.getSource('planned-route')) {
+        map.addSource('planned-route', { type: 'geojson', data: routeData });
+        map.addLayer({
+          id: 'planned-route-line',
+          type: 'line',
+          source: 'planned-route',
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: { 'line-color': '#ff5a5f', 'line-width': 5, 'line-opacity': 0.85 }
+        });
+      } else {
+        map.getSource('planned-route').setData(routeData);
+      }
+
+      const bounds = routeCoordinates.reduce(
+        (acc, coord) => acc.extend(coord),
+        new maplibregl.LngLatBounds(routeCoordinates[0], routeCoordinates[0])
+      );
+
+      map.fitBounds(bounds, { padding: 60 });
+    }
+
+    map.on('load', () => loadStraightRoute());
+  </script>
 
 <script>
-  const startPoint = [121.53757876493243, 24.957843316982597];
-
-  const map = new maplibregl.Map({
-    container: 'map',
-    style: 'https://tiles.openfreemap.org/styles/liberty',
-    center: startPoint,
-    zoom: 15.5,
-    pitch: 60,
-    bearing: -20
-  });
-
-  map.addControl(new maplibregl.NavigationControl());
-
-  const points = [
-    startPoint,
-    [121.53718727937625, 24.958020472873933],
-    [121.53700218472507, 24.958708953293844],
-    [121.5359826848114, 24.956359743373927]
-  ];
-
-  points.forEach((p, i) => {
-    new maplibregl.Marker()
-      .setLngLat(p)
-      .setPopup(new maplibregl.Popup().setText(`第${i+1}點`))
-      .addTo(map);
-  });
-
-  function loadRoute() {
-    const data = {
-      type: 'FeatureCollection',
-      features: [{
-        type: 'Feature',
-        geometry: {
-          type: 'LineString',
-          coordinates: points
+    // typewriter effect for dialog
+    document.addEventListener('DOMContentLoaded', () => {
+      const el = document.querySelector('.dialog');
+      const text = el.textContent;
+      el.textContent = '';
+      let i = 0;
+      const speed = 35;
+      function type() {
+        if (i < text.length) {
+          el.textContent += text.charAt(i);
+          i++;
+          setTimeout(type, speed);
         }
-      }]
-    };
-
-    if (!map.getSource('route')) {
-      map.addSource('route', { type: 'geojson', data });
-      map.addLayer({
-        id: 'route-line',
-        type: 'line',
-        source: 'route',
-        paint: {
-          'line-color': '#ff5a5f',
-          'line-width': 5
-        }
-      });
-    }
-  }
-
-  map.on('load', loadRoute);
-</script>
-
+      }
+      type();
+    });
+  </script>
 </body>
 </html>
