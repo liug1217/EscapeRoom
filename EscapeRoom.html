@@ -114,6 +114,11 @@
     });
 
     map.addControl(new maplibregl.NavigationControl());
+    map.addControl(new maplibregl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+      showUserHeading: true
+    }));
 
     new maplibregl.Marker()
       .setLngLat(startPoint)
